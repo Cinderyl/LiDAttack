@@ -46,7 +46,9 @@ class Detector3DTemplate(nn.Module):
             module, model_info_dict = getattr(self, 'build_%s' % module_name)(
                 model_info_dict=model_info_dict
             )
+
             self.add_module(module_name, module)
+
         return model_info_dict['module_list']
 
     def build_vfe(self, model_info_dict):

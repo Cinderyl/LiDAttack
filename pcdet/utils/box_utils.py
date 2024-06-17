@@ -130,6 +130,25 @@ def remove_points_in_boxes3d(points, boxes3d):
 
     return points.numpy() if is_numpy else points
 
+def boxes3d_lidar_to_custom_camera(boxes3d_lidar):
+    """
+    :param boxes3d_lidar: (N, 7) [x, y, z, dx, dy, dz, heading], (x, y, z) is the box center
+    :return:
+        boxes3d_camera: (N, 7) [x, y, z, l, h, w, r] in rect camera coords
+    """
+    boxes3d_lidar_copy = copy.deepcopy(boxes3d_lidar)
+    xyz_lidar = boxes3d_lidar_copy[:, 0:3]
+    l, w, h = boxes3d_lidar_copy[:, 3:4], boxes3d_lidar_copy[:, 4:5], boxes3d_lidar_copy[:, 5:6]
+    r = boxes3d_lidar_copy[:, 6:7]
+
+    xyz_lidar[:, 2] -= h.reshape(-1) / 2
+    # 在没有矫正数据的情况下，只能进行基本的坐标转换
+    # 以下假设xyz_lidar已经是KITTI相机坐标系下的坐标，如果不是，需要进一步调整
+    xyz_cam = xyz_lidar
+
+    # 调整角度，使之符合KITTI相机坐标系
+    r = -r - np.pi / 2
+    return np.concatenate([xyz_cam, l, h, w, r], axis=-1)
 
 def boxes3d_kitti_camera_to_lidar(boxes3d_camera, calib):
     """

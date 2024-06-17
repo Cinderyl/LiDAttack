@@ -1,4 +1,40 @@
 CLASS_NAMES: ['Car', 'Pedestrian', 'Cyclist']
+DATA_CONFIG1:
+    _BASE_CONFIG_: cfgs/dataset_configs/kitti1_dataset.yaml
+
+    DATA_PROCESSOR:
+        -   NAME: mask_points_and_boxes_outside_range
+            REMOVE_OUTSIDE_BOXES: True
+
+        -   NAME: sample_points
+            NUM_POINTS: {
+                'train': 16387,
+                'test': 16387
+            }
+
+        -   NAME: shuffle_points
+            SHUFFLE_ENABLED: {
+                'train': True,
+                'test': False
+            }
+DATA_CONFIG2:
+    _BASE_CONFIG_: cfgs/dataset_configs/kitti2_dataset.yaml
+
+    DATA_PROCESSOR:
+        -   NAME: mask_points_and_boxes_outside_range
+            REMOVE_OUTSIDE_BOXES: True
+
+        -   NAME: sample_points
+            NUM_POINTS: {
+                'train': 16387,
+                'test': 16387
+            }
+
+        -   NAME: shuffle_points
+            SHUFFLE_ENABLED: {
+                'train': True,
+                'test': False
+            }
 
 DATA_CONFIG:
     _BASE_CONFIG_: cfgs/dataset_configs/kitti_dataset.yaml

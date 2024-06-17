@@ -323,6 +323,7 @@ class KittiDataset(DatasetTemplate):
             pred_dict['score'] = pred_scores
             pred_dict['boxes_lidar'] = pred_boxes
 
+
             return pred_dict
 
         annos = []

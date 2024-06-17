@@ -48,6 +48,7 @@ class CustomDataset(DatasetTemplate):
 
     def get_label(self, idx):
         label_file = self.root_path / 'labels' / ('%s.txt' % idx)
+        print('root=',self.root_path)
         assert label_file.exists()
         with open(label_file, 'r') as f:
             lines = f.readlines()
@@ -236,10 +237,14 @@ def create_custom_infos(dataset_cfg, class_names, data_path, save_path, workers=
         training=False, logger=common_utils.create_logger()
     )
     train_split, val_split = 'train', 'val'
+    # train_split, val_split = 'train', 'test'
     num_features = len(dataset_cfg.POINT_FEATURE_ENCODING.src_feature_list)
 
     train_filename = save_path / ('custom_infos_%s.pkl' % train_split)
     val_filename = save_path / ('custom_infos_%s.pkl' % val_split)
+    #下面两行新加的
+    # trainval_filename = save_path / 'custom_infos_trainval.pkl'
+    # test_filename = save_path / 'custom_infos_test.pkl'
 
     print('------------------------Start to generate data infos------------------------')
 
@@ -258,6 +263,16 @@ def create_custom_infos(dataset_cfg, class_names, data_path, save_path, workers=
     with open(val_filename, 'wb') as f:
         pickle.dump(custom_infos_val, f)
     print('Custom info train file is saved to %s' % val_filename)
+    #下面两行新加
+    # with open(trainval_filename, 'wb') as f:
+    #     pickle.dump(custom_infos_train + custom_infos_val, f)
+    # print('Custom info trainval file is saved to %s' % trainval_filename)
+
+    # dataset.set_split('test')
+    # custom_infos_test = dataset.get_infos(num_workers=workers, has_label=False,class_names=2)#之前有count_inside_pts=False,并加上了一个class_names类别数
+    # with open(test_filename, 'wb') as f:
+    #     pickle.dump(custom_infos_test, f)
+    # print('Custom info test file is saved to %s' % test_filename)
 
     print('------------------------Start create groundtruth database for data augmentation------------------------')
     dataset.set_split(train_split)
@@ -277,7 +292,8 @@ if __name__ == '__main__':
         ROOT_DIR = (Path(__file__).resolve().parent / '../../../').resolve()
         create_custom_infos(
             dataset_cfg=dataset_cfg,
-            class_names=['Vehicle', 'Pedestrian', 'Cyclist'],
+            # class_names=['Car', 'Pedestrian', 'Cyclist'],
+            class_names=['Pedestrian','Cyclist'],
             data_path=ROOT_DIR / 'data' / 'custom',
             save_path=ROOT_DIR / 'data' / 'custom',
         )

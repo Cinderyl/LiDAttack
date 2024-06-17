@@ -4,7 +4,31 @@ from torch.autograd import Function
 
 from ...utils import box_utils
 from . import roipoint_pool3d_cuda
+def roipool3d_gpu(input, rois, out_size, spatial_scale):
+    class RoIPool3D(Function):
+        @staticmethod
+        def forward(ctx, input, rois, out_size, spatial_scale):
+            ctx.save_for_backward(rois)
+            ctx.out_size = out_size
+            ctx.spatial_scale = spatial_scale
 
+            output = roipoint_pool3d_cuda.forward(input, rois, out_size[0], out_size[1], out_size[2], spatial_scale)
+
+            return output
+
+        @staticmethod
+        def backward(ctx, grad_output):
+            rois, = ctx.saved_tensors
+            grad_input = grad_rois = None
+            spatial_scale = ctx.spatial_scale
+            out_size = ctx.out_size
+
+            if ctx.needs_input_grad[0]:
+                grad_input = torch.zeros_like(grad_output)
+                roipoint_pool3d_cuda.backward(grad_input, rois, grad_output, out_size[0], out_size[1], out_size[2],
+                                        spatial_scale)
+
+            return grad_input, grad_rois, None, None
 
 class RoIPointPool3d(nn.Module):
     def __init__(self, num_sampled_points=512, pool_extra_width=1.0):

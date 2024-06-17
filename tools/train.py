@@ -1,4 +1,7 @@
+# import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4,5,6,7"
 import _init_path
+
 import argparse
 import datetime
 import glob
@@ -7,6 +10,8 @@ from pathlib import Path
 from test import repeat_eval_ckpt
 
 import torch
+# torch.cuda.set_device(2)
+# device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 import torch.nn as nn
 from tensorboardX import SummaryWriter
 
@@ -19,11 +24,14 @@ from train_utils.train_utils import train_model
 
 
 def parse_config():
+    """
+       解析命令行参数，配置文件和路径
+    """
     parser = argparse.ArgumentParser(description='arg parser')
-    parser.add_argument('--cfg_file', type=str, default=None, help='specify the config for training')
+    parser.add_argument('--cfg_file', type=str, default='./cfgs/custom_models/pointrcnn.yaml', help='specify the config for training')
 
     parser.add_argument('--batch_size', type=int, default=None, required=False, help='batch size for training')
-    parser.add_argument('--epochs', type=int, default=None, required=False, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=102, required=False, help='number of epochs to train for')
     parser.add_argument('--workers', type=int, default=4, help='number of workers for dataloader')
     parser.add_argument('--extra_tag', type=str, default='default', help='extra tag for this experiment')
     parser.add_argument('--ckpt', type=str, default=None, help='checkpoint to start from')
@@ -42,14 +50,14 @@ def parse_config():
     parser.add_argument('--max_waiting_mins', type=int, default=0, help='max waiting minutes')
     parser.add_argument('--start_epoch', type=int, default=0, help='')
     parser.add_argument('--num_epochs_to_eval', type=int, default=0, help='number of checkpoints to be evaluated')
-    parser.add_argument('--save_to_file', action='store_true', default=False, help='')
+    parser.add_argument('--save_to_file', action='store_true', default=True, help='')
     
     parser.add_argument('--use_tqdm_to_record', action='store_true', default=False, help='if True, the intermediate losses will not be logged to file, only tqdm will be used')
     parser.add_argument('--logger_iter_interval', type=int, default=50, help='')
     parser.add_argument('--ckpt_save_time_interval', type=int, default=300, help='in terms of seconds')
     parser.add_argument('--wo_gpu_stat', action='store_true', help='')
     parser.add_argument('--use_amp', action='store_true', help='use mix precision training')
-    
+
 
     args = parser.parse_args()
 
@@ -67,20 +75,21 @@ def parse_config():
 
 def main():
     args, cfg = parse_config()
+    # 单GPU训练
     if args.launcher == 'none':
         dist_train = False
         total_gpus = 1
     else:
         total_gpus, cfg.LOCAL_RANK = getattr(common_utils, 'init_dist_%s' % args.launcher)(
             args.tcp_port, args.local_rank, backend='nccl'
-        )
+        )  # 调用common_utils中的init_dist_pytorch方法
         dist_train = True
 
     if args.batch_size is None:
         args.batch_size = cfg.OPTIMIZATION.BATCH_SIZE_PER_GPU
     else:
         assert args.batch_size % total_gpus == 0, 'Batch size should match the number of gpus'
-        args.batch_size = args.batch_size // total_gpus
+        args.batch_size = args.batch_size // total_gpus  # 根据GPU数量计算batch_size
 
     args.epochs = cfg.OPTIMIZATION.NUM_EPOCHS if args.epochs is None else args.epochs
 
@@ -97,8 +106,10 @@ def main():
 
     # log to file
     logger.info('**********************Start logging**********************')
-    gpu_list = os.environ['CUDA_VISIBLE_DEVICES'] if 'CUDA_VISIBLE_DEVICES' in os.environ.keys() else 'ALL'
-    logger.info('CUDA_VISIBLE_DEVICES=%s' % gpu_list)
+    # gpu_list = os.environ['CUDA_VISIBLE_DEVICES'] if 'CUDA_VISIBLE_DEVICES' in os.environ.keys() else 'ALL'
+    # logger.info('CUDA_VISIBLE_DEVICES=%s' % gpu_list)
+    # logger.info('CUDA_VISIBLE_DEVICES=%s' % device)
+
 
     if dist_train:
         logger.info('Training in distributed mode : total_batch_size: %d' % (total_gpus * args.batch_size))

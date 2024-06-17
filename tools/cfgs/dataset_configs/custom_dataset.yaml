@@ -1,10 +1,14 @@
 DATASET: 'CustomDataset'
 DATA_PATH: '../data/custom'
 
-POINT_CLOUD_RANGE: [-75.2, -75.2, -2, 75.2, 75.2, 4]
+# # POINT_CLOUD_RANGE: [16, -32, -9.6, 112, 32, 2.4]
+# POINT_CLOUD_RANGE: [-69.12, -39.68, -9.6, 69.12, 32, 0.16]
+POINT_CLOUD_RANGE: [-75.2, -75.2, -2, 75.2, 75.2, 4] #second
+#POINT_CLOUD_RANGE:  [0, -50, -23, 150, 40, 1] #second
+# POINT_CLOUD_RANGE: [0, -40, -3, 70.4, 40, 1]
 
 MAP_CLASS_TO_KITTI: {
-    'Vehicle': 'Car',
+    # 'Car': 'Car',
     'Pedestrian': 'Pedestrian',
     'Cyclist': 'Cyclist',
 }
@@ -33,10 +37,12 @@ DATA_AUGMENTOR:
           DB_INFO_PATH:
               - custom_dbinfos_train.pkl
           PREPARE: {
-             filter_by_min_points: ['Vehicle:5', 'Pedestrian:5', 'Cyclist:5'],
+            #  filter_by_min_points: ['Car:5', 'Pedestrian:5', 'Cyclist:5'],
+            filter_by_min_points: ['Cyclist:5', 'Pedestrian:5'],
           }
 
-          SAMPLE_GROUPS: ['Vehicle:20', 'Pedestrian:15', 'Cyclist:15']
+          # SAMPLE_GROUPS: ['Car:20', 'Pedestrian:15', 'Cyclist:15']
+          SAMPLE_GROUPS: ['Cyclist:15', 'Pedestrian:15']
           NUM_POINT_FEATURES: 4
           DATABASE_WITH_FAKELIDAR: False
           REMOVE_EXTRA_WIDTH: [0.0, 0.0, 0.0]
@@ -60,9 +66,9 @@ DATA_PROCESSOR:
         'train': True,
         'test': False
       }
-
     - NAME: transform_points_to_voxels
-      VOXEL_SIZE: [0.1, 0.1, 0.15]
+#      VOXEL_SIZE: [0.05, 0.05, 0.1]
+      VOXEL_SIZE: [6, 4, 0.3]
       MAX_POINTS_PER_VOXEL: 5
       MAX_NUMBER_OF_VOXELS: {
         'train': 150000,
